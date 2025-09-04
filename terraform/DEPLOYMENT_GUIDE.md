@@ -1,247 +1,387 @@
-# 🚀 Terraform 배포 가이드
+# IoT-MSK-EC2 Deployment Guide
 
-## 📋 **배포 전 준비사항**
+## Overview
 
-### 0. **Terraform 설치 확인**
-```powershell
-# Terraform 설치 확인
-terraform version
+This guide provides step-by-step instructions for deploying the IoT-MSK-EC2 pipeline infrastructure using Terraform.
 
-# 설치되지 않았다면 Chocolatey로 설치
-choco install terraform
+## Prerequisites
 
-# 또는 수동 다운로드: https://developer.hashicorp.com/terraform/downloads
-```
+### Required Software
+- AWS CLI >= 2.0
+- Terraform >= 1.0
+- Python 3.7+
+- Git
 
-### 1. **AWS CLI 설정**
-```powershell
+### AWS Requirements
+- AWS Account with appropriate permissions
+- AWS CLI configured with credentials
+- Key pair for EC2 access
+
+## Pre-Deployment Setup
+
+### 1. AWS CLI Configuration
+
+```bash
+# Configure AWS CLI
 aws configure
-# AWS Access Key ID: YOUR_ACCESS_KEY
-# AWS Secret Access Key: YOUR_SECRET_KEY
-# Default region name: ap-northeast-2
-# Default output format: json
+
+# Verify configuration
+aws sts get-caller-identity
 ```
 
-### 2. **EC2 키 페어 생성**
-```powershell
-# AWS 콘솔에서 EC2 키 페어 생성 또는 CLI로 생성
-aws ec2 create-key-pair --key-name psw0904-key --query 'KeyMaterial' --output text > psw0904-key.pem
+### 2. Create EC2 Key Pair
 
-# 키 페어 권한 설정 (Windows에서는 파일 속성으로 설정)
-# psw0904-key.pem 파일 우클릭 → 속성 → 보안 → 고급 → 상속 사용 안 함 → 현재 사용자만 읽기 권한
-```
-
-### 3. **terraform.tfvars 파일 수정**
 ```bash
-# 실제 키 페어 이름으로 변경 (이미 psw0904-key로 설정됨)
-ec2_key_pair_name = "psw0904-key"
+# Create key pair for EC2 access
+aws ec2 create-key-pair \
+    --key-name psw0507-key \
+    --query 'KeyMaterial' \
+    --output text > psw0507-key.pem
 
-# 보안을 위해 강력한 패스워드로 변경
-msk_scram_password = "YourVerySecurePassword123!"
+# Set proper permissions (Linux/Mac)
+chmod 400 psw0507-key.pem
 
-# 사용자명도 psw0904 포함
-msk_scram_username = "iotuser-psw0904"
-
-# 프로젝트명에 psw0904 포함 확인
-project_name = "iot-msk-pipeline-psw0904"
+# Windows: Right-click psw0507-key.pem → Properties → Security → Advanced → Disable inheritance → Current user read-only
 ```
 
----
+### 3. Configure Terraform Variables
 
-## 🛠️ **배포 명령어**
+Edit `terraform.tfvars` file:
 
-### 1. **Terraform 초기화**
-```powershell
+```hcl
+# AWS Configuration
+aws_region = "ap-northeast-2"
+project_name = "iot-msk-pipeline-psw0507"
+environment = "dev"
+owner = "psw0507"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+vpc_name = "vpc-iot-msk-psw0507"
+availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_names = ["private-subnet-psw0507-1", "private-subnet-psw0507-2"]
+public_subnet_cidrs = ["10.0.101.0/24", "10.0.102.0/24"]
+public_subnet_names = ["public-subnet-psw0507-1", "public-subnet-psw0507-2"]
+
+# MSK Configuration
+msk_instance_type = "kafka.t3.small"
+msk_volume_size = 100
+msk_scram_username = "iotuser-psw0507"
+
+# EC2 Configuration
+ec2_instance_type = "t3.micro"
+ec2_key_pair_name = "psw0507-key"
+
+# IoT Configuration
+iot_thing_name = "test-psw0507"
+iot_topic_name = "sensor-data"
+```
+
+## Deployment Steps
+
+### Step 1: Initialize Terraform
+
+```bash
 cd terraform
+
+# Initialize Terraform
 terraform init
+
+# Validate configuration
+terraform validate
 ```
 
-### 2. **배포 계획 확인**
-```powershell
+### Step 2: Plan Deployment
+
+```bash
+# Review deployment plan
 terraform plan
+
+# Save plan to file (optional)
+terraform plan -out=deployment.tfplan
 ```
 
-### 3. **인프라 배포**
-```powershell
+### Step 3: Deploy Infrastructure
+
+```bash
+# Apply configuration
 terraform apply
-# "yes" 입력하여 배포 승인
+
+# Or apply saved plan
+terraform apply deployment.tfplan
 ```
 
-### 4. **배포 결과 확인**
-```powershell
+### Step 4: Post-Deployment Verification
+
+```bash
+# Check outputs
 terraform output
+
+# Example output:
+#   ec2_public_ip = "1.2.3.4"
+#   msk_cluster_arn = "arn:aws:kafka:..."
+#   iot_thing_name = "test-psw0507"
 ```
 
----
+## Post-Deployment Configuration
 
-## 🧪 **배포 후 테스트**
+### 1. Access EC2 Instance
 
-### 1. **EC2 인스턴스 접속**
-```powershell
-# Terraform output에서 SSH 명령어 확인
-terraform output ssh_command
-
-# 예시: ssh -i psw0904-key.pem ec2-user@1.2.3.4
-```
-
-### 2. **Consumer 서비스 시작**
 ```bash
-# EC2 인스턴스 내에서 실행
-sudo systemctl start iot-msk-pipeline-psw0904-consumer
-sudo systemctl status iot-msk-pipeline-psw0904-consumer
-```
+# SSH to EC2 instance
+ssh -i psw0507-key.pem ec2-user@<EC2_PUBLIC_IP>
 
-### 3. **IoT 메시지 테스트**
-```bash
-# AWS CLI로 IoT 메시지 발송
-aws iot-data publish \
-  --topic "topic/test" \
-  --payload '{"temperature": 25.5, "humidity": 60.2, "timestamp": "2025-09-04T10:30:00Z"}' \
-  --region ap-northeast-2
-```
-
-### 4. **Consumer 로그 확인**
-```bash
-# EC2에서 Consumer 로그 확인
-sudo journalctl -f -u iot-msk-pipeline-psw0904-consumer
-```
-
----
-
-## 🔧 **문제 해결**
-
-### MSK 클러스터 생성 실패
-```bash
-# MSK 클러스터는 생성에 20-30분 소요
-# 타임아웃 오류 시 다시 apply 실행
-terraform apply -auto-approve
-```
-
-### EC2 User Data 스크립트 확인
-```bash
-# EC2 접속 후 설치 로그 확인
+# Check installation log
 cat /home/ec2-user/installation.log
-cat /var/log/cloud-init-output.log
 ```
 
-### Consumer 연결 문제
+### 2. Start Consumer Service
+
 ```bash
-# 보안 그룹 규칙 확인
-aws ec2 describe-security-groups --group-ids <msk-security-group-id>
+# Start MSK consumer service
+sudo systemctl start iot-msk-pipeline-psw0507-consumer
 
-# MSK 브로커 엔드포인트 확인
-aws kafka get-bootstrap-brokers --cluster-arn <msk-cluster-arn>
+# Enable auto-start
+sudo systemctl enable iot-msk-pipeline-psw0507-consumer
+
+# Check service status
+sudo systemctl status iot-msk-pipeline-psw0507-consumer
 ```
 
----
+### 3. Monitor Consumer Logs
 
-## 🗑️ **인프라 삭제**
+```bash
+# View real-time logs
+sudo journalctl -f -u iot-msk-pipeline-psw0507-consumer
 
-### 전체 리소스 삭제
-```powershell
+# View recent logs
+sudo journalctl -u iot-msk-pipeline-psw0507-consumer --since "1 hour ago"
+```
+
+## Testing the Pipeline
+
+### 1. Test IoT Message Publishing
+
+```bash
+# From local machine or EC2
+cd app
+
+# Install dependencies
+pip install boto3
+
+# Send test message
+python iot_publisher.py --test
+```
+
+### 2. Verify Message Flow
+
+```bash
+# Send test message via AWS CLI
+aws iot-data publish \
+    --topic "topic/test" \
+    --payload '{
+        "temperature": 25.5,
+        "humidity": 60.2,
+        "timestamp": "2025-09-04T10:30:00Z",
+        "device": "psw0507-sensor"
+    }' \
+    --region ap-northeast-2
+```
+
+### 3. Check Consumer Output
+
+```bash
+# On EC2 instance, check if messages are received
+sudo journalctl -f -u iot-msk-pipeline-psw0507-consumer
+```
+
+## Resource Verification
+
+### Created Resources Checklist
+
+#### Core Infrastructure
+- ✅ KMS Key: iot-msk-pipeline-psw0507-kms
+- ✅ Secrets Manager: AmazonMSK_iotuser-psw0507
+- ✅ MSK Cluster: iot-msk-pipeline-psw0507-cluster
+- ✅ IoT Thing: test-psw0507
+- ✅ IoT Rule: iotmskpipelinepsw0507MSKRule
+
+#### Networking
+- ✅ VPC: vpc-iot-msk-psw0507
+- ✅ Public Subnets: public-subnet-psw0507-1, public-subnet-psw0507-2
+- ✅ Private Subnets: private-subnet-psw0507-1, private-subnet-psw0507-2
+- ✅ Internet Gateway: igw-iot-msk-psw0507
+- ✅ NAT Gateways: nat-gateway-psw0507-1, nat-gateway-psw0507-2
+- ✅ Route Tables: rt-public-psw0507, rt-private-psw0507-1, rt-private-psw0507-2
+- ✅ Security Groups: msk-sg-psw0507, ec2-sg-psw0507
+
+#### Compute
+- ✅ EC2 Instance: iot-msk-pipeline-psw0507-consumer
+- ✅ EC2 Role: iot-msk-pipeline-psw0507-ec2-role
+- ✅ SystemD Service: iot-msk-pipeline-psw0507-consumer.service
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Terraform Apply Fails
+
+```bash
+# Check Terraform state
+terraform show
+
+# Refresh state
+terraform refresh
+
+# Fix state issues
+terraform import <resource_type>.<resource_name> <resource_id>
+```
+
+#### 2. EC2 Instance Not Accessible
+
+```bash
+# Check security group rules
+aws ec2 describe-security-groups --group-names ec2-sg-psw0507
+
+# Verify key pair
+aws ec2 describe-key-pairs --key-names psw0507-key
+
+# Check instance status
+aws ec2 describe-instances --filters "Name=tag:Name,Values=iot-msk-pipeline-psw0507-consumer"
+```
+
+#### 3. MSK Connectivity Issues
+
+```bash
+# Check MSK cluster status
+aws kafka describe-cluster --cluster-arn <MSK_CLUSTER_ARN>
+
+# Verify bootstrap brokers
+aws kafka get-bootstrap-brokers --cluster-arn <MSK_CLUSTER_ARN>
+
+# Check secrets
+aws secretsmanager get-secret-value --secret-id AmazonMSK_iotuser-psw0507
+```
+
+#### 4. IoT Rule Not Working
+
+```bash
+# Check IoT rule
+aws iot get-topic-rule --rule-name iotmskpipelinepsw0507MSKRule
+
+# Check IoT logs
+aws logs filter-log-events \
+    --log-group-name /aws/iot/iot-msk-pipeline-psw0507 \
+    --start-time $(date -d '1 hour ago' +%s)000
+```
+
+### Log Locations
+
+#### EC2 Consumer Logs
+```bash
+# Service logs
+sudo journalctl -u iot-msk-pipeline-psw0507-consumer
+
+# Installation logs
+cat /home/ec2-user/installation.log
+
+# System logs
+sudo tail -f /var/log/messages
+```
+
+#### CloudWatch Logs
+- IoT Core: `/aws/iot/iot-msk-pipeline-psw0507`
+- MSK: `/aws/msk/iot-msk-pipeline-psw0507`
+
+## Monitoring and Maintenance
+
+### 1. CloudWatch Monitoring
+
+```bash
+# View IoT Core metrics
+aws cloudwatch get-metric-statistics \
+    --namespace AWS/IoT \
+    --metric-name PublishIn.Success \
+    --start-time 2025-09-04T00:00:00Z \
+    --end-time 2025-09-04T23:59:59Z \
+    --period 3600 \
+    --statistics Sum
+
+# View MSK metrics
+aws cloudwatch get-metric-statistics \
+    --namespace AWS/Kafka \
+    --metric-name MessagesInPerSec \
+    --start-time 2025-09-04T00:00:00Z \
+    --end-time 2025-09-04T23:59:59Z \
+    --period 3600 \
+    --statistics Average
+```
+
+### 2. Regular Maintenance
+
+```bash
+# Update EC2 instance
+sudo yum update -y
+
+# Restart consumer service if needed
+sudo systemctl restart iot-msk-pipeline-psw0507-consumer
+
+# Check disk usage
+df -h
+
+# Check memory usage
+free -h
+```
+
+## Cleanup
+
+### Destroy Infrastructure
+
+```bash
+# Destroy all resources
 terraform destroy
-# "yes" 입력하여 삭제 승인
+
+# Confirm destruction
+# Type: yes
+
+# Verify cleanup
+aws kafka list-clusters
+aws iot list-things
+aws ec2 describe-instances
 ```
 
-### 특정 리소스만 삭제
-```powershell
-terraform destroy -target=module.ec2
-```
+### Manual Cleanup (if needed)
 
----
-
-## 📊 **배포 결과 예시**
-
-```
-Outputs:
-
-deployment_summary = {
-  "aws_region" = "ap-northeast-2"
-  "ec2_instance" = "i-1234567890abcdef0"
-  "ec2_public_ip" = "1.2.3.4"
-  "environment" = "dev"
-  "iot_rule" = "iotmskpipelinepsw0904MSKRule"
-  "iot_thing" = "test-psw0904"
-  "msk_cluster" = "iot-msk-pipeline-psw0904-cluster"
-  "project_name" = "iot-msk-pipeline-psw0904"
-  "vpc_id" = "vpc-1234567890abcdef0"
-}
-
-ssh_command = "ssh -i psw0904-key.pem ec2-user@1.2.3.4"
-```
-
-이제 `terraform apply` 한 번으로 전체 IoT 파이프라인이 자동으로 구축됩니다! 🎯✨
-
----
-
-## 🎯 **최종 배포 단계별 체크리스트**
-
-### ✅ **1단계: 사전 준비 (5분)**
-```powershell
-# 1. AWS CLI 설정 확인
-aws configure list
-
-# 2. 키 페어 생성 (아직 없다면)
-aws ec2 create-key-pair --key-name psw0904-key --query 'KeyMaterial' --output text > psw0904-key.pem
-
-# 3. terraform.tfvars 확인
-cat terraform.tfvars  # psw0904가 모든 곳에 포함되어 있는지 확인
-```
-
-### ✅ **2단계: Terraform 배포 (30분)**
-```powershell
-# 1. 디렉토리 이동
-cd C:\Users\admin\Desktop\IoT-application\terraform
-
-# 2. Terraform 초기화
-terraform init
-
-# 3. 배포 계획 확인
-terraform plan
-
-# 4. 실제 배포 (자동 승인)
-terraform apply -auto-approve
-```
-
-### ✅ **3단계: 배포 완료 확인 (5분)**
-```powershell
-# 1. 배포 결과 확인
-terraform output
-
-# 2. 주요 리소스 확인
-terraform output deployment_summary
-
-# 3. SSH 명령어 확인
-terraform output ssh_command
-```
-
-### ✅ **4단계: Consumer 테스트 (10분)**
 ```bash
-# 1. EC2 접속
-ssh -i psw0904-key.pem ec2-user@<PUBLIC_IP>
+# Delete key pair
+aws ec2 delete-key-pair --key-name psw0507-key
 
-# 2. Consumer 서비스 시작
-sudo systemctl start iot-msk-pipeline-psw0904-consumer
-sudo systemctl status iot-msk-pipeline-psw0904-consumer
+# Remove local key file
+rm psw0507-key.pem
 
-# 3. 로그 확인 (별도 터미널에서)
-sudo journalctl -f -u iot-msk-pipeline-psw0904-consumer
+# Clean Terraform state
+rm -rf .terraform
+rm terraform.tfstate*
 ```
 
-### ✅ **5단계: IoT 메시지 테스트 (5분)**
-```powershell
-# 로컬 PowerShell에서 테스트 메시지 발송
-aws iot-data publish --topic "topic/test" --payload '{\"temperature\": 25.5, \"humidity\": 60.2, \"timestamp\": \"2025-09-04T10:30:00Z\", \"device\": \"psw0904-sensor\"}' --region ap-northeast-2
-```
+## Best Practices
 
-### 🎯 **예상 결과**
-```
-✅ KMS 키: key-iot-msk-pipeline-psw0904-kms
-✅ Secrets Manager: AmazonMSK_iotuser-psw0904  
-✅ MSK 클러스터: iot-msk-pipeline-psw0904-cluster
-✅ IoT Thing: test-psw0904
-✅ IoT Rule: iotmskpipelinepsw0904MSKRule
-✅ EC2 Consumer: 실시간 메시지 수신 중
-```
+1. **Version Control**: Keep terraform files in version control
+2. **State Management**: Use remote state storage for production
+3. **Security**: Rotate credentials regularly
+4. **Monitoring**: Set up CloudWatch alarms
+5. **Backup**: Regular backup of important data
+6. **Testing**: Test in development environment first
 
-**총 소요시간: 약 55분 (대부분 MSK 클러스터 생성 시간)**
+## Support
+
+For issues and questions:
+1. Check troubleshooting section
+2. Review AWS documentation
+3. Check Terraform documentation
+4. Contact system administrator
+
+---
+
+**Note**: This deployment guide is specific to the psw0507 configuration. Update resource names and identifiers as needed for different environments.

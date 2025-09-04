@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # 설정값
 CONFIG = {
     'aws_region': 'ap-northeast-2',
-    'iot_thing_name': 'test-psw0904',
+    'iot_thing_name': 'test-psw0507',
     'iot_topic': 'topic/test',  # IoT Rule에서 리스닝하는 토픽
     'endpoint_url': None  # AWS IoT Core 엔드포인트 (자동으로 찾음)
 }
@@ -143,7 +143,7 @@ if __name__ == "__main__":
        - 단일 테스트: python iot_publisher.py --test
     
     📝 현재 설정된 IoT 토픽: 'topic/test'
-    📝 IoT Thing 이름: 'test-psw0904'
+    📝 IoT Thing 이름: 'test-psw0507'
     """)
     
     import sys

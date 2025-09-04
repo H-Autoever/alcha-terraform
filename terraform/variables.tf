@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "project_name" {
   description = "Project name for resource naming and tagging"
   type        = string
-  default     = "iot-msk-pipeline-psw0904"
+  default     = "iot-msk-pipeline-psw0507"
 }
 
 variable "environment" {
@@ -19,7 +19,7 @@ variable "environment" {
 variable "owner" {
   description = "Owner of the resources"
   type        = string
-  default     = "psw0904"
+  default     = "psw0507"
 }
 
 variable "vpc_cidr" {
@@ -31,7 +31,7 @@ variable "vpc_cidr" {
 variable "vpc_name" {
   description = "VPC name"
   type        = string
-  default     = "vpc-iot-msk-psw0904"
+  default     = "vpc-iot-msk-psw0507"
 }
 
 variable "availability_zones" {
@@ -49,7 +49,7 @@ variable "private_subnet_cidrs" {
 variable "private_subnet_names" {
   description = "Names for private subnets"
   type        = list(string)
-  default     = ["private-subnet-psw0904-1", "private-subnet-psw0904-2"]
+  default     = ["private-subnet-psw0507-1", "private-subnet-psw0507-2"]
 }
 
 variable "public_subnet_cidrs" {
@@ -61,7 +61,7 @@ variable "public_subnet_cidrs" {
 variable "public_subnet_names" {
   description = "Names for public subnets"
   type        = list(string)
-  default     = ["public-subnet-psw0904-1", "public-subnet-psw0904-2"]
+  default     = ["public-subnet-psw0507-1", "public-subnet-psw0507-2"]
 }
 
 variable "msk_instance_type" {
@@ -85,13 +85,13 @@ variable "ec2_instance_type" {
 variable "ec2_key_pair_name" {
   description = "EC2 key pair name"
   type        = string
-  default     = "psw0904-key"
+  default     = "psw0507-key"
 }
 
 variable "msk_scram_username" {
   description = "MSK SCRAM username"
   type        = string
-  default     = "iotuser-psw0904"
+  default     = "iotuser-psw0507"
 }
 
 variable "msk_scram_password" {
@@ -104,7 +104,7 @@ variable "msk_scram_password" {
 variable "iot_thing_name" {
   description = "IoT Thing name"
   type        = string
-  default     = "test-psw0904"
+  default     = "test-psw0507"
 }
 
 variable "iot_topic_name" {

@@ -1,192 +1,129 @@
-﻿# IoT-MSK-EC2 파이프라인
+﻿# IoT-MSK-EC2 Pipeline
 
-##  개요
+## Overview
 
-AWS IoT
-### 1. 사전 요구
+A real-time IoT data pipeline using AWS IoT Core, Amazon MSK (Managed Streaming for Apache Kafka), and EC2 for streaming data processing.
 
-```bash
-cd terraform
+## Architecture
 
-# ```bash
-cd app
-
-# Python 가상환경 생성
-python -m venv venv
-source venv/bin/acti### 1. 단일 메시지 테스트
-```bash
-python iot_publisher.py --test
+```
+IoT Device → AWS IoT Core → Amazon MSK → EC2 Consumer
 ```
 
-### 2. 연속 메시지 발송
-```bash
-python iot_publisher.py
-```indows: venv\Scripts\activate
+### Components
 
-# 패키지 설치
-pip install boto3
+- **AWS IoT Core**: Collects data from IoT devices
+- **Amazon MSK**: Kafka cluster for streaming data processing
+- **EC2**: Consumes data from MSK for real-time processing
 
-# 테스트 메시지 발송
-python iot_publisher.py --test
-``` init
+## Infrastructure Components
 
-# 배포 계획 확인
-terraform plan
+### AWS IoT Core
+- **Thing**: test-psw0507
+- **Topic**: topic/test
+- **Rule**: Routes messages to MSK
 
-# 배포 실행
-terraform apply
-```I 설정 (aws configure)
-- Terraform 설치 (>= 1.0)
-- Python 3.7+ (로컬 테스트용), Amazon MSK (Managed Streaming for Apache Kafka), EC2를 활용한 실시간 IoT 데이터 파이프라인입니다.
+### Amazon MSK
+- **Version**: Kafka 3.5.1
+- **Authentication**: SCRAM-SHA-512
+- **Encryption**: TLS + KMS
+- **Monitoring**: CloudWatch logging
 
-###  아키텍처
+### EC2 Consumer
+- **Instance Type**: t3.micro
+- **OS**: Amazon Linux 2
+- **Language**: Python 3
+- **Libraries**: confluent-kafka, boto3
 
-`
-IoT Device  AWS IoT Core  Amazon MSK  EC2 Consumer
-`
+### Networking
+- **VPC**: Custom VPC with public/private subnets
+- **Security**: Security groups for MSK and EC2
+- **High Availability**: Multi-AZ deployment
 
-- **IoT Core**: IoT 디바이스에서 전송된 데이터 수집
-- **MSK**: Kafka 클러스터로 스트리밍 데이터 처리
-- **EC2**: MSK에서 데이터를 소비하여 실시간 처리
+## Prerequisites
 
-##  프로젝트 구조
+### Required Tools
+- AWS CLI configured (`aws configure`)
+- Terraform >= 1.0
+- Python 3.7+ (for local testing)
 
-`
-IoT-MSK-EC2/
- app/
-    iot_publisher.py       # IoT 메시지 발송 스크립트
- terraform/
-    main.tf               # 메인 Terraform 설정
-    variables.tf          # 변수 정의
-    outputs.tf           # 출력 값 정의
-    modules/
-        networking/       # VPC, 보안그룹 설정
-        msk/             # Amazon MSK 클러스터
-        iot/             # IoT Core 설정
-        ec2/             # EC2 Consumer 인스턴스
- README.md
-`
+### AWS Permissions
+- IAM permissions for IoT Core, MSK, EC2, VPC
+- Secrets Manager access
+- CloudWatch logs access
 
-##  배포 가이드
+## Quick Start
 
-### 1. 사전 요구사항
-
-- AWS CLI 설정 (ws configure)
-- Terraform 설치 (>= 1.0)
-- Python 3.7+ (로컬 테스트용)
-
-### 2. Terraform 배포
+### 1. Infrastructure Deployment
 
 ```bash
 cd terraform
 
-# 초기화
+# Initialize Terraform
 terraform init
 
-# 배포 계획 확인
+# Review deployment plan
 terraform plan
 
-# 배포 실행
+# Deploy infrastructure
 terraform apply
 ```
 
-### 3. 로컬 테스트 환경 설정
+### 2. Test Message Publishing
 
 ```bash
 cd app
 
-# Python 가상환경 생성
+# Create Python virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 패키지 설치
+# Activate virtual environment
+# Linux/Mac:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# Install dependencies
 pip install boto3
 
-# 테스트 메시지 발송
+# Send test message
 python iot_publisher.py --test
 ```
 
-##  구성 요소
+## Usage
 
-###  IoT Core
-- **Thing**: test-psw0904
-- **Topic**: topic/test
-- **Rule**: MSK로 메시지 라우팅
+### 1. Single Test Message
 
-###  Amazon MSK
-- **버전**: Kafka 3.5.1
-- **인증**: SCRAM-SHA-512
-- **암호화**: TLS + KMS
-- **모니터링**: CloudWatch 로깅
-
-###  EC2 Consumer
-- **인스턴스**: t3.micro (Amazon Linux 2)
-- **Python**: 3.7.16
-- **패키지**: confluent-kafka, boto3
-- **서비스**: systemd 자동 실행
-
-##  보안 설정
-
-### IAM 역할
-- **EC2 역할**: MSK, Secrets Manager 접근 권한
-- **IoT 역할**: MSK 발행 권한
-
-### 네트워킹
-- **VPC**: 전용 네트워크 환경
-- **보안그룹**: 최소 권한 원칙
-- **서브넷**: 퍼블릭/프라이빗 분리
-
-### 암호화
-- **MSK**: TLS in-transit, KMS at-rest
-- **Secrets**: SCRAM 자격증명 암호화 저장
-
-##  모니터링
-
-### CloudWatch 로그
-- MSK 브로커 로그
-- EC2 Consumer 애플리케이션 로그
-- IoT Core 규칙 실행 로그
-
-### 메트릭
-- MSK 클러스터 성능
-- EC2 인스턴스 리소스 사용량
-- IoT 메시지 처리량
-
-##  테스트
-
-### 1. 단일 메시지 테스트
 ```bash
 python iot_publisher.py --test
 ```
 
-### 2. 연속 메시지 발송
+### 2. Continuous Message Streaming
+
 ```bash
 python iot_publisher.py
-`
-
-### 3. EC2 Consumer 상태 확인
-```bash
-# SSH 접속
-ssh -i psw0904-key.pem ec2-user@<EC2_PUBLIC_IP>
-
-# Consumer 서비스 상태
-sudo systemctl status iot-msk-pipeline-psw0904-consumer
-
-# 실시간 로그 확인
-sudo journalctl -f -u iot-msk-pipeline-psw0904-consumer
 ```
 
-##  메시지 플로우
+### 3. EC2 Consumer Status Check
 
-1. **발송**: IoT Publisher가 IoT Core로 JSON 메시지 전송
-2. **라우팅**: IoT Rule이 메시지를 MSK 토픽으로 라우팅
-3. **처리**: EC2 Consumer가 MSK에서 메시지 소비
-4. **로깅**: CloudWatch에 처리 결과 기록
+```bash
+# SSH to EC2 instance
+ssh -i psw0507-key.pem ec2-user@<EC2_PUBLIC_IP>
 
-### 메시지 형식
-`json
+# Check consumer service status
+sudo systemctl status iot-msk-pipeline-psw0507-consumer
+
+# View real-time logs
+sudo journalctl -f -u iot-msk-pipeline-psw0507-consumer
+```
+
+## Message Flow
+
+### Message Format
+
+```json
 {
-  "device_id": "test-psw0904",
+  "device_id": "test-psw0507",
   "timestamp": "2025-09-04T04:50:27.474600Z",
   "temperature": 30.91,
   "humidity": 61.96,
@@ -197,27 +134,116 @@ sudo journalctl -f -u iot-msk-pipeline-psw0904-consumer
   },
   "battery_level": 84,
   "signal_strength": -55,
-  "message": "테스트 메시지입니다"
+  "message": "Test message"
 }
-`
+```
 
-##  리소스 정리
+### Data Flow Process
+
+1. **IoT Publisher** → Sends JSON message to IoT Core
+2. **IoT Rule** → Routes message from `topic/test` to MSK
+3. **MSK Kafka** → Stores message in Kafka topic
+4. **EC2 Consumer** → Reads and processes messages from MSK
+
+## Monitoring
+
+### CloudWatch Logs
+- IoT Core logs: `/aws/iot/iot-msk-pipeline-psw0507`
+- MSK logs: `/aws/msk/iot-msk-pipeline-psw0507`
+
+### Consumer Logs
+```bash
+# View consumer logs on EC2
+sudo journalctl -f -u iot-msk-pipeline-psw0507-consumer
+
+# Check consumer status
+sudo systemctl status iot-msk-pipeline-psw0507-consumer
+```
+
+## Security
+
+### Authentication
+- **MSK**: SCRAM-SHA-512 with AWS Secrets Manager
+- **EC2**: IAM roles and security groups
+- **IoT Core**: IAM policies for device authentication
+
+### Encryption
+- **In Transit**: TLS encryption for all communications
+- **At Rest**: KMS encryption for MSK and Secrets Manager
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Consumer Not Receiving Messages
+```bash
+# Check MSK connectivity
+aws kafka describe-cluster --cluster-arn <MSK_CLUSTER_ARN>
+
+# Verify secrets
+aws secretsmanager get-secret-value --secret-id AmazonMSK_iotuser-psw0507
+```
+
+#### 2. IoT Rule Not Triggering
+```bash
+# Check IoT logs
+aws logs filter-log-events --log-group-name /aws/iot/iot-msk-pipeline-psw0507
+```
+
+#### 3. EC2 Consumer Service Issues
+```bash
+# Restart consumer service
+sudo systemctl restart iot-msk-pipeline-psw0507-consumer
+
+# Check service logs
+sudo journalctl -u iot-msk-pipeline-psw0507-consumer --since "1 hour ago"
+```
+
+## Cleanup
+
+### Destroy Infrastructure
 
 ```bash
 cd terraform
+
+# Destroy all resources
 terraform destroy
 ```
 
-##  참고사항
+**Warning**: This will delete all data and resources. Make sure to backup any important data before running destroy.
 
-- **비용**: MSK 클러스터는 시간당 요금이 발생합니다
-- **보안**: 실제 운영환경에서는 추가 보안 설정 필요
-- **확장성**: 트래픽 증가 시 MSK 파티션 및 EC2 인스턴스 확장 고려
+## Project Structure
 
-##  관련 문서
+```
+IoT-MSK-EC2/
+├── README.md
+├── app/
+│   ├── iot_publisher.py       # IoT message publisher
+│   └── requirements.txt       # Python dependencies
+└── terraform/
+    ├── main.tf               # Main Terraform configuration
+    ├── variables.tf          # Variable definitions
+    ├── outputs.tf            # Output values
+    ├── terraform.tfvars      # Variable values
+    ├── DEPLOYMENT_GUIDE.md   # Detailed deployment guide
+    ├── PSW0507_RESOURCE_CHECKLIST.md  # Resource checklist
+    └── modules/
+        ├── ec2/              # EC2 consumer module
+        ├── iot/              # IoT Core module
+        ├── msk/              # MSK cluster module
+        ├── networking/       # VPC and networking
+        ├── secrets/          # Secrets Manager
+        └── kms/              # KMS encryption
+```
 
-- [AWS IoT Core 개발자 가이드](https://docs.aws.amazon.com/iot/latest/developerguide/)
-- [Amazon MSK 개발자 가이드](https://docs.aws.amazon.com/msk/latest/developerguide/)
-- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+## Contributing
 
----
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.

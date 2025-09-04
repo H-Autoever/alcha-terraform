@@ -14,7 +14,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "igw-iot-msk-psw0904"
+    Name = "igw-iot-msk-psw0507"
   }
 }
 
@@ -55,7 +55,7 @@ resource "aws_eip" "nat" {
   depends_on = [aws_internet_gateway.main]
 
   tags = {
-    Name = "nat-eip-psw0904-${count.index + 1}"
+    Name = "nat-eip-psw0507-${count.index + 1}"
   }
 }
 
@@ -67,7 +67,7 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = aws_subnet.public[count.index].id
 
   tags = {
-    Name = "nat-gateway-psw0904-${count.index + 1}"
+    Name = "nat-gateway-psw0507-${count.index + 1}"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -83,7 +83,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "rt-public-psw0904"
+    Name = "rt-public-psw0507"
   }
 }
 
@@ -99,7 +99,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "rt-private-psw0904-${count.index + 1}"
+    Name = "rt-private-psw0507-${count.index + 1}"
   }
 }
 
@@ -121,8 +121,8 @@ resource "aws_route_table_association" "private" {
 
 # Security Group for MSK
 resource "aws_security_group" "msk" {
-  name_prefix = "msk-sg-psw0904-"
-  description = "Security group for MSK cluster psw0904"
+  name_prefix = "msk-sg-psw0507-"
+  description = "Security group for MSK cluster psw0507"
   vpc_id      = aws_vpc.main.id
 
   # SCRAM-SHA-512 port for EC2 access
@@ -206,14 +206,14 @@ resource "aws_security_group" "msk" {
   }
 
   tags = {
-    Name = "msk-sg-psw0904"
+    Name = "msk-sg-psw0507"
   }
 }
 
 # Security Group for EC2
 resource "aws_security_group" "ec2" {
-  name_prefix = "ec2-sg-psw0904-"
-  description = "Security group for EC2 consumer psw0904"
+  name_prefix = "ec2-sg-psw0507-"
+  description = "Security group for EC2 consumer psw0507"
   vpc_id      = aws_vpc.main.id
 
   # SSH access
@@ -234,6 +234,6 @@ resource "aws_security_group" "ec2" {
   }
 
   tags = {
-    Name = "ec2-sg-psw0904"
+    Name = "ec2-sg-psw0507"
   }
 }
