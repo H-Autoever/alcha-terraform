@@ -2,7 +2,42 @@
 
 ##  개요
 
-AWS IoT Core, Amazon MSK (Managed Streaming for Apache Kafka), EC2를 활용한 실시간 IoT 데이터 파이프라인입니다.
+AWS IoT
+### 1. 사전 요구
+
+```bash
+cd terraform
+
+# ```bash
+cd app
+
+# Python 가상환경 생성
+python -m venv venv
+source venv/bin/acti### 1. 단일 메시지 테스트
+```bash
+python iot_publisher.py --test
+```
+
+### 2. 연속 메시지 발송
+```bash
+python iot_publisher.py
+```indows: venv\Scripts\activate
+
+# 패키지 설치
+pip install boto3
+
+# 테스트 메시지 발송
+python iot_publisher.py --test
+``` init
+
+# 배포 계획 확인
+terraform plan
+
+# 배포 실행
+terraform apply
+```I 설정 (aws configure)
+- Terraform 설치 (>= 1.0)
+- Python 3.7+ (로컬 테스트용), Amazon MSK (Managed Streaming for Apache Kafka), EC2를 활용한 실시간 IoT 데이터 파이프라인입니다.
 
 ###  아키텍처
 
@@ -42,7 +77,7 @@ IoT-MSK-EC2/
 
 ### 2. Terraform 배포
 
-`ash
+```bash
 cd terraform
 
 # 초기화
@@ -53,11 +88,11 @@ terraform plan
 
 # 배포 실행
 terraform apply
-`
+```
 
 ### 3. 로컬 테스트 환경 설정
 
-`ash
+```bash
 cd app
 
 # Python 가상환경 생성
@@ -69,13 +104,13 @@ pip install boto3
 
 # 테스트 메시지 발송
 python iot_publisher.py --test
-`
+```
 
 ##  구성 요소
 
 ###  IoT Core
-- **Thing**: 	est-psw0904
-- **Topic**: 	opic/test
+- **Thing**: test-psw0904
+- **Topic**: topic/test
 - **Rule**: MSK로 메시지 라우팅
 
 ###  Amazon MSK
@@ -120,17 +155,17 @@ python iot_publisher.py --test
 ##  테스트
 
 ### 1. 단일 메시지 테스트
-`ash
+```bash
 python iot_publisher.py --test
-`
+```
 
 ### 2. 연속 메시지 발송
-`ash
+```bash
 python iot_publisher.py
 `
 
 ### 3. EC2 Consumer 상태 확인
-`ash
+```bash
 # SSH 접속
 ssh -i psw0904-key.pem ec2-user@<EC2_PUBLIC_IP>
 
@@ -139,7 +174,7 @@ sudo systemctl status iot-msk-pipeline-psw0904-consumer
 
 # 실시간 로그 확인
 sudo journalctl -f -u iot-msk-pipeline-psw0904-consumer
-`
+```
 
 ##  메시지 플로우
 
@@ -168,10 +203,10 @@ sudo journalctl -f -u iot-msk-pipeline-psw0904-consumer
 
 ##  리소스 정리
 
-`ash
+```bash
 cd terraform
 terraform destroy
-`
+```
 
 ##  참고사항
 
@@ -186,5 +221,3 @@ terraform destroy
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 
 ---
-
-**Built with  using Terraform & AWS**
