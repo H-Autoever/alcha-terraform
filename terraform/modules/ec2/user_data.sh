@@ -45,6 +45,12 @@ ALIAS_EOF
 # Source bashrc for current session
 source /home/ec2-user/.bashrc
 
+# Install Docker
+yum install -y docker
+systemctl start docker
+systemctl enable docker
+usermod -a -G docker ec2-user
+
 # 추가 --
 
 # 1. 개발 도구 그룹 설치
@@ -198,7 +204,15 @@ echo "🔧 Kafka Client Tools 설치 완료!" >> /home/ec2-user/installation.log
 echo "📂 Kafka 설치 경로: /opt/kafka" >> /home/ec2-user/installation.log
 echo "🔑 인증 파일: /opt/kafka/config/client.properties" >> /home/ec2-user/installation.log
 echo "" >> /home/ec2-user/installation.log
-echo "📖 Kafka 명령어 사용법:" >> /home/ec2-user/installation.log
+echo "� Docker 설치 완료!" >> /home/ec2-user/installation.log
+echo "📱 Kafka UI 실행 명령어: docker run -d --name kafka-ui -p 8080:8080 provectuslabs/kafka-ui:latest" >> /home/ec2-user/installation.log
+echo "🌐 Kafka UI 접속: http://\$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8080" >> /home/ec2-user/installation.log
+echo "" >> /home/ec2-user/installation.log
+echo "🔧 MSK 브로커: ${bootstrap_brokers}" >> /home/ec2-user/installation.log
+echo "👤 사용자명: ${username}" >> /home/ec2-user/installation.log
+echo "🔐 비밀번호: ${password}" >> /home/ec2-user/installation.log
+echo "" >> /home/ec2-user/installation.log
+echo "�📖 Kafka 명령어 사용법:" >> /home/ec2-user/installation.log
 echo "  - 토픽 목록: kafka-topics --list" >> /home/ec2-user/installation.log
 echo "  - 토픽 상세: kafka-topics --describe --topic ${topic_name}" >> /home/ec2-user/installation.log
 echo "  - 메시지 확인: kafka-console-consumer --topic ${topic_name} --from-beginning" >> /home/ec2-user/installation.log
