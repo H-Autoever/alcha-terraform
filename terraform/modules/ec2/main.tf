@@ -87,6 +87,15 @@ resource "aws_iam_instance_profile" "ec2" {
   role = aws_iam_role.ec2.name
 }
 
+# Data source to get MSK credentials from Secrets Manager
+data "aws_secretsmanager_secret_version" "msk_credentials" {
+  secret_id = var.secret_arn
+}
+
+locals {
+  msk_credentials = jsondecode(data.aws_secretsmanager_secret_version.msk_credentials.secret_string)
+}
+
 # User Data Script
 locals {
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
@@ -94,6 +103,8 @@ locals {
     secret_name              = var.secret_name
     bootstrap_brokers        = var.bootstrap_brokers_sasl_scram
     topic_name              = var.iot_topic_name
+    username                = local.msk_credentials.username
+    password                = local.msk_credentials.password
   }))
 }
 

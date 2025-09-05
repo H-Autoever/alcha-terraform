@@ -9,6 +9,42 @@ yum install -y python3 python3-pip git
 # Install Java 11 (required for Kafka tools)
 yum install -y java-11-amazon-corretto
 
+# Install Kafka Client Tools
+cd /opt
+wget https://archive.apache.org/dist/kafka/2.8.1/kafka_2.12-2.8.1.tgz
+tar -xzf kafka_2.12-2.8.1.tgz
+mv kafka_2.12-2.8.1 kafka
+chown -R ec2-user:ec2-user /opt/kafka
+
+# Create Kafka client configuration directory
+mkdir -p /opt/kafka/config
+chown -R ec2-user:ec2-user /opt/kafka/config
+
+# Create client.properties with SCRAM authentication
+cat > /opt/kafka/config/client.properties << 'KAFKA_EOF'
+security.protocol=SASL_SSL
+sasl.mechanism=SCRAM-SHA-512
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="${username}" password="${password}";
+KAFKA_EOF
+
+# Set proper permissions
+chown ec2-user:ec2-user /opt/kafka/config/client.properties
+chmod 600 /opt/kafka/config/client.properties
+
+# Create Kafka aliases for easy use
+cat >> /home/ec2-user/.bashrc << 'ALIAS_EOF'
+
+# Kafka Tools Aliases
+export KAFKA_HOME=/opt/kafka
+export PATH=$PATH:$KAFKA_HOME/bin
+alias kafka-topics='$KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server ${bootstrap_brokers} --command-config $KAFKA_HOME/config/client.properties'
+alias kafka-console-consumer='$KAFKA_HOME/bin/kafka-console-consumer.sh --bootstrap-server ${bootstrap_brokers} --consumer.config $KAFKA_HOME/config/client.properties'
+alias kafka-console-producer='$KAFKA_HOME/bin/kafka-console-producer.sh --bootstrap-server ${bootstrap_brokers} --producer.config $KAFKA_HOME/config/client.properties'
+ALIAS_EOF
+
+# Source bashrc for current session
+source /home/ec2-user/.bashrc
+
 # 추가 --
 
 # 1. 개발 도구 그룹 설치
@@ -157,3 +193,45 @@ echo "📁 프로젝트 디렉토리: /home/ec2-user/${project_name}" >> /home/e
 echo "🔧 Consumer 스크립트: /home/ec2-user/${project_name}/msk_consumer.py" >> /home/ec2-user/installation.log
 echo "⚙️  서비스 이름: ${project_name}-consumer.service" >> /home/ec2-user/installation.log
 echo "🚀 시작 명령어: sudo systemctl start ${project_name}-consumer" >> /home/ec2-user/installation.log
+echo "" >> /home/ec2-user/installation.log
+echo "🔧 Kafka Client Tools 설치 완료!" >> /home/ec2-user/installation.log
+echo "📂 Kafka 설치 경로: /opt/kafka" >> /home/ec2-user/installation.log
+echo "🔑 인증 파일: /opt/kafka/config/client.properties" >> /home/ec2-user/installation.log
+echo "" >> /home/ec2-user/installation.log
+echo "📖 Kafka 명령어 사용법:" >> /home/ec2-user/installation.log
+echo "  - 토픽 목록: kafka-topics --list" >> /home/ec2-user/installation.log
+echo "  - 토픽 상세: kafka-topics --describe --topic ${topic_name}" >> /home/ec2-user/installation.log
+echo "  - 메시지 확인: kafka-console-consumer --topic ${topic_name} --from-beginning" >> /home/ec2-user/installation.log
+echo "  - 실시간 모니터링: kafka-console-consumer --topic ${topic_name}" >> /home/ec2-user/installation.log
+
+# Create Kafka usage guide
+cat > /home/ec2-user/kafka_guide.txt << 'GUIDE_EOF'
+🔧 Kafka Client Tools 사용 가이드
+
+📂 설치 위치: /opt/kafka
+🔑 인증 파일: /opt/kafka/config/client.properties
+
+🚀 자주 사용하는 명령어:
+
+1. 토픽 목록 조회:
+   kafka-topics --list
+
+2. 특정 토픽 상세 정보:
+   kafka-topics --describe --topic iot-sensor-data
+
+3. 토픽의 모든 메시지 확인:
+   kafka-console-consumer --topic iot-sensor-data --from-beginning
+
+4. 실시간 메시지 모니터링:
+   kafka-console-consumer --topic iot-sensor-data
+
+5. 새로운 토픽 생성:
+   kafka-topics --create --topic my-new-topic --partitions 2 --replication-factor 2
+
+6. 토픽 삭제:
+   kafka-topics --delete --topic my-topic
+
+💡 팁: 모든 명령어는 이미 MSK 연결 정보와 인증이 설정되어 있습니다.
+GUIDE_EOF
+
+chown ec2-user:ec2-user /home/ec2-user/kafka_guide.txt
