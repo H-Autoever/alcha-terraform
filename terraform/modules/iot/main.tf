@@ -95,7 +95,7 @@ resource "aws_iot_topic_rule" "msk" {
   name        = "${replace(var.project_name, "-", "")}MSKRule"
   description = "Route IoT messages to MSK cluster"
   enabled     = true
-  sql         = "SELECT * FROM 'topic/test'"
+  sql         = "SELECT *, topic() as source_topic FROM 'topic/+'"
   sql_version = "2015-10-08"
 
   kafka {

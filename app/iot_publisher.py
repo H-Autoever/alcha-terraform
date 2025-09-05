@@ -19,6 +19,7 @@ CONFIG = {
     'endpoint_url': None  # AWS IoT Core 엔드포인트 (자동으로 찾음)
 }
 
+
 def get_iot_endpoint():
     """AWS IoT Core 데이터 엔드포인트 조회"""
     try:
@@ -45,9 +46,13 @@ def generate_sensor_data():
         'signal_strength': random.randint(-90, -30)
     }
 
-def send_iot_message(message_data):
+def send_iot_message(message_data, topic=None):
     """AWS IoT Core로 메시지 발송"""
     try:
+        # 토픽이 지정되지 않으면 기본 토픽 사용
+        if topic is None:
+            topic = CONFIG['iot_topic']
+            
         # IoT 엔드포인트 가져오기
         endpoint = get_iot_endpoint()
         if not endpoint:
@@ -64,16 +69,16 @@ def send_iot_message(message_data):
         
         # 메시지 발송
         response = iot_data_client.publish(
-            topic=CONFIG['iot_topic'],
+            topic=topic,
             qos=1,
             payload=json.dumps(message_data, ensure_ascii=False)
         )
         
-        logger.info(f"✅ 메시지 발송 성공: {response}")
+        logger.info(f"✅ 메시지 발송 성공 (토픽: {topic}): {response}")
         return True
         
     except Exception as e:
-        logger.error(f"❌ 메시지 발송 실패: {e}")
+        logger.error(f"❌ 메시지 발송 실패 (토픽: {topic}): {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -113,6 +118,38 @@ def main():
         import traceback
         traceback.print_exc()
 
+def test_multiple_topics():
+    """여러 IoT 토픽으로 테스트 메시지 발송"""
+    # 테스트할 토픽들
+    test_topics = [
+        "topic/test",      # 기존 토픽
+        "topic/sensor",    # 새로운 센서 토픽
+        "topic/device",    # 새로운 디바이스 토픽
+        "topic/alert"      # 새로운 알림 토픽
+    ]
+    
+    success_count = 0
+    
+    for topic in test_topics:
+        logger.info(f"\n📤 {topic} 토픽으로 메시지 발송 중...")
+        
+        # 토픽별로 약간 다른 데이터 생성
+        message_data = generate_sensor_data()
+        message_data['topic_name'] = topic
+        message_data['message_type'] = topic.split('/')[-1]  # test, sensor, device, alert
+        
+        if send_iot_message(message_data, topic):
+            success_count += 1
+            logger.info(f"✅ {topic} 발송 성공!")
+        else:
+            logger.error(f"❌ {topic} 발송 실패!")
+        
+        # 토픽 간 간격
+        time.sleep(1)
+    
+    logger.info(f"\n📊 테스트 결과: {success_count}/{len(test_topics)} 성공")
+    return success_count == len(test_topics)
+
 def test_single_message():
     """단일 테스트 메시지 발송"""
     logger.info("🧪 단일 테스트 메시지 발송...")
@@ -141,6 +178,7 @@ if __name__ == "__main__":
     3. 실행 옵션:
        - 연속 발송: python iot_publisher.py
        - 단일 테스트: python iot_publisher.py --test
+       - 다중 토픽 테스트: python iot_publisher.py --multi-topics
     
     📝 현재 설정된 IoT 토픽: 'topic/test'
     📝 IoT Thing 이름: 'test-psw0507'
@@ -149,5 +187,7 @@ if __name__ == "__main__":
     import sys
     if '--test' in sys.argv:
         test_single_message()
+    elif '--multi-topics' in sys.argv:
+        test_multiple_topics()
     else:
         main()
