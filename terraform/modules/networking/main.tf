@@ -225,6 +225,15 @@ resource "aws_security_group" "ec2" {
     cidr_blocks = ["0.0.0.0/0"]  # 실제 환경에서는 특정 IP로 제한
   }
 
+  # Kafka UI access
+  ingress {
+    description = "Kafka UI"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     description = "All outbound traffic"
     from_port   = 0

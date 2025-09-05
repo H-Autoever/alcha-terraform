@@ -51,6 +51,9 @@ systemctl start docker
 systemctl enable docker
 usermod -a -G docker ec2-user
 
+# Start Kafka UI automatically
+docker run -d --name kafka-ui -p 8080:8080 provectuslabs/kafka-ui:latest
+
 # 추가 --
 
 # 1. 개발 도구 그룹 설치
