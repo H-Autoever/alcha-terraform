@@ -14,7 +14,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "igw-iot-msk-psw0507"
+    Name = "igw-iot-msk-team-carpoor"
   }
 }
 
@@ -55,7 +55,7 @@ resource "aws_eip" "nat" {
   depends_on = [aws_internet_gateway.main]
 
   tags = {
-    Name = "nat-eip-psw0507-${count.index + 1}"
+    Name = "nat-eip-team-carpoor-${count.index + 1}"
   }
 }
 
@@ -67,7 +67,7 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = aws_subnet.public[count.index].id
 
   tags = {
-    Name = "nat-gateway-psw0507-${count.index + 1}"
+    Name = "nat-gateway-team-carpoor-${count.index + 1}"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -83,7 +83,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "rt-public-psw0507"
+    Name = "rt-public-team-carpoor"
   }
 }
 
@@ -99,7 +99,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "rt-private-psw0507-${count.index + 1}"
+    Name = "rt-private-team-carpoor-${count.index + 1}"
   }
 }
 
@@ -121,8 +121,8 @@ resource "aws_route_table_association" "private" {
 
 # Security Group for MSK
 resource "aws_security_group" "msk" {
-  name_prefix = "msk-sg-psw0507-"
-  description = "Security group for MSK cluster psw0507"
+  name_prefix = "msk-sg-team-carpoor-"
+  description = "Security group for MSK cluster team-carpoor"
   vpc_id      = aws_vpc.main.id
 
   # SCRAM-SHA-512 port for EC2 access
@@ -206,14 +206,14 @@ resource "aws_security_group" "msk" {
   }
 
   tags = {
-    Name = "msk-sg-psw0507"
+    Name = "msk-sg-team-carpoor"
   }
 }
 
 # Security Group for EC2
 resource "aws_security_group" "ec2" {
-  name_prefix = "ec2-sg-psw0507-"
-  description = "Security group for EC2 consumer psw0507"
+  name_prefix = "ec2-sg-team-carpoor-"
+  description = "Security group for EC2 consumer team-carpoor"
   vpc_id      = aws_vpc.main.id
 
   # SSH access
@@ -243,6 +243,6 @@ resource "aws_security_group" "ec2" {
   }
 
   tags = {
-    Name = "ec2-sg-psw0507"
+    Name = "ec2-sg-team-carpoor"
   }
 }
