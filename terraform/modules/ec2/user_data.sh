@@ -58,6 +58,8 @@ docker run -d -p 8080:8080 \
     provectuslabs/kafka-ui:latest
 
 # 추가 -- (ECR / .env / 컨테이너 실행)
+
+# 에러시 중단단
 set -euo pipefail
 
 # 변수는 Terraform templatefile로 주입됩니다
@@ -75,19 +77,16 @@ fi
 # ECR 로그인
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
-# 팀에서 alcha_network를 별도 생성한다고 했으나, 없으면 생성
-docker network create alcha_network || true
-
 # MongoDB (영속 볼륨 포함)
 docker volume create mongo_data || true
 docker rm -f mongodb-server || true
-docker pull mongo:6
+docker pull mongo:latest
 docker run -d --name mongodb-server \
   --restart unless-stopped \
   --network alcha_network \
   -p 27017:27017 \
   -v mongo_data:/data/db \
-  mongo:6
+  mongo:latest
 
 # 통합 환경파일 작성(~/.env)
 cat > /home/ec2-user/.env <<ENV_EOF
