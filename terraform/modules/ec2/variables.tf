@@ -9,7 +9,12 @@ variable "ecr_registry" {
 }
 
 variable "ecr_repository_connector" {
-  description = "ECR repository name, e.g. alcha/connector"
+  description = "ECR repository name : alcha/connector"
+  type        = string
+}
+
+variable "ecr_repository_frontend" {
+  description = "ECR repository name : alcha/frontend"
   type        = string
 }
 

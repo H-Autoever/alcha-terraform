@@ -59,15 +59,17 @@ docker run -d -p 8080:8080 \
 
 # 추가 -- (ECR / .env / 컨테이너 실행)
 
-# 에러시 중단단
+# 에러시 중단
 set -euo pipefail
 
 # 변수는 Terraform templatefile로 주입됩니다
 AWS_REGION="${aws_region}"
 ECR_REGISTRY="${ecr_registry}"
-ECR_REPO="${ecr_repository_connector}"
+ECR_REPO_CONNECTOR="${ecr_repository_connector}"
+ECR_REPO_FRONTEND="${ecr_repository_frontend}"
 IMAGE_TAG="${image_tag}"
-CONNECTOR_IMAGE="$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
+CONNECTOR_IMAGE="$ECR_REGISTRY/$ECR_REPO_CONNECTOR:$IMAGE_TAG"
+FRONTEND_IMAGE="$ECR_REGISTRY/$ECR_REPO_FRONTEND:$IMAGE_TAG"
 
 # AWS CLI 설치 (없으면)
 if ! command -v aws >/dev/null 2>&1; then
@@ -76,6 +78,11 @@ fi
 
 # ECR 로그인
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+
+docker network create --driver=bridge alcha_network
+
+
 
 # MongoDB (영속 볼륨 포함)
 docker volume create mongo_data || true
@@ -119,6 +126,13 @@ docker run -d --name alcha-connector \
   --env-file /home/ec2-user/.env \
   "$CONNECTOR_IMAGE"
 
+# Start Frontend Server 
+docker rm -f alcha-frontend || true
+docker pull "$FRONTEND_IMAGE"
+docker stop alcha-frontend || true
+docker rm alcha-frontend || true
+docker run -d --name alcha-frontend -p 5173:3000 "$FRONTEND_IMAGE"
+
 # 1. 개발 도구 그룹 설치
 sudo yum groupinstall -y "Development Tools"
 
@@ -135,129 +149,6 @@ sudo pip3 install confluent-kafka==1.9.2 boto3 certifi
 
 # 특정버전으로 변경
 # pip3 install confluent-kafka boto3 certifi
-
-# Create project directory
-mkdir -p /home/ec2-user/${project_name}
-cd /home/ec2-user/${project_name}
-
-# Create MSK Consumer Python script
-cat > msk_consumer.py << 'EOF'
-#!/usr/bin/env python3
-
-import boto3
-import json
-import certifi
-from confluent_kafka import Consumer
-import time
-import logging
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-def get_msk_credentials():
-    """Secrets Manager에서 MSK SCRAM 자격 증명 조회"""
-    try:
-        secrets_client = boto3.client('secretsmanager', region_name='ap-northeast-2')
-        response = secrets_client.get_secret_value(SecretId='${secret_name}')
-        secret = json.loads(response['SecretString'])
-        return secret['username'], secret['password']
-    except Exception as e:
-        logger.error(f"시크릿 조회 실패: {e}")
-        return None, None
-
-def create_msk_consumer():
-    """MSK Consumer 생성 및 SCRAM 인증 설정"""
-    username, password = get_msk_credentials()
-    
-    if not username or not password:
-        raise Exception("MSK 자격 증명을 가져올 수 없습니다")
-    
-    logger.info(f"MSK 자격 증명을 성공적으로 가져왔습니다: {username}")
-    
-    # Consumer 설정
-    config = {
-        'bootstrap.servers': '${bootstrap_brokers}',
-        'security.protocol': 'SASL_SSL',
-        'sasl.mechanism': 'SCRAM-SHA-512',
-        'sasl.username': username,
-        'sasl.password': password,
-        'group.id': f'iot-consumer-group-{int(time.time())}',
-        'auto.offset.reset': 'latest',
-        'ssl.ca.location': certifi.where(),
-        'enable.auto.commit': True,
-        'auto.commit.interval.ms': 5000
-    }
-    
-    return Consumer(config)
-
-def main():
-    """메인 Consumer 실행 함수"""
-    logger.info("🚀 Terraform MSK Consumer 시작...")
-    
-    try:
-        consumer = create_msk_consumer()
-        consumer.subscribe(['${topic_name}'])
-        
-        logger.info("📡 메시지 폴링 시작...")
-        
-        while True:
-            msg = consumer.poll(1.0)
-            
-            if msg is None:
-                continue
-            if msg.error():
-                logger.error(f"Consumer 오류: {msg.error()}")
-                continue
-                
-            # 메시지 출력
-            logger.info("=" * 50)
-            logger.info("📨 수신된 메시지:")
-            logger.info(f"   토픽: {msg.topic()}")
-            logger.info(f"   파티션: {msg.partition()}")
-            logger.info(f"   오프셋: {msg.offset()}")
-            logger.info(f"   값: {msg.value().decode('utf-8')}")
-            logger.info("=" * 50)
-            
-    except KeyboardInterrupt:
-        logger.info("\n🛑 Consumer 중단됨")
-    except Exception as e:
-        logger.error(f"오류 발생: {e}")
-    finally:
-        consumer.close()
-        logger.info("✅ Consumer 종료 완료")
-
-if __name__ == "__main__":
-    main()
-EOF
-
-# Make script executable
-chmod +x msk_consumer.py
-
-# Change ownership to ec2-user
-chown -R ec2-user:ec2-user /home/ec2-user/${project_name}
-
-# Create systemd service for auto-start
-cat > /etc/systemd/system/${project_name}-consumer.service << EOF
-[Unit]
-Description=${project_name} MSK Consumer
-After=network.target
-
-[Service]
-Type=simple
-User=ec2-user
-WorkingDirectory=/home/ec2-user/${project_name}
-ExecStart=/usr/bin/python3 /home/ec2-user/${project_name}/msk_consumer.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Enable and start the service
-systemctl daemon-reload
-systemctl enable ${project_name}-consumer.service
 
 # Log installation completion
 echo "✅ Terraform EC2 Consumer 설치 완료!" > /home/ec2-user/installation.log

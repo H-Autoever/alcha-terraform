@@ -110,21 +110,21 @@ locals {
 # User Data Script
 locals {
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    project_name              = var.project_name
-    secret_name              = var.secret_name
-    bootstrap_brokers        = var.bootstrap_brokers_sasl_scram
-    topic_name              = var.iot_topic_name
-    username                = local.msk_credentials.username
-    password                = local.msk_credentials.password
-    ecr_registry            = var.ecr_registry
+    project_name           = var.project_name
+    secret_name            = var.secret_name
+    bootstrap_brokers      = var.bootstrap_brokers_sasl_scram
+    topic_name             = var.iot_topic_name
+    username               = local.msk_credentials.username
+    password               = local.msk_credentials.password
+    aws_region             = var.aws_region
+    ecr_registry           = var.ecr_registry
     ecr_repository_connector = var.ecr_repository_connector
-    image_tag               = var.image_tag
-    kafka_group_id          = var.kafka_group_id
-    mongo_uri               = var.mongo_uri
-    mongo_db_name           = var.mongo_db_name
-    alcha_backend_port      = var.alcha_backend_port
-    redis_host              = var.redis_host
-    redis_port              = var.redis_port
+    ecr_repository_frontend = var.ecr_repository_frontend
+    image_tag              = var.image_tag
+    kafka_group_id         = var.kafka_group_id
+    alcha_backend_port     = var.alcha_backend_port
+    redis_host             = var.redis_host
+    redis_port             = var.redis_port
   }))
 }
 

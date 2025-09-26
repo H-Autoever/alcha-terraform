@@ -126,6 +126,12 @@ variable "ecr_repository_connector" {
   default     = "alcha/connector"
 }
 
+variable "ecr_repository_frontend" {
+  description = "ECR repository alcha/frontend"
+  type        = string
+  default     = "alcha/frontend"
+}
+
 variable "image_tag" {
   description = "Docker image tag to deploy (e.g., latest or git sha)"
   type        = string
