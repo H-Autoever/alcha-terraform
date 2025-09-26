@@ -112,3 +112,72 @@ variable "iot_topic_name" {
   type        = string
   default     = "iot-sensor-data"
 }
+
+# ECR and Connector variables
+variable "ecr_registry" {
+  description = "ECR registry domain, e.g. 123456789012.dkr.ecr.ap-northeast-2.amazonaws.com"
+  type        = string
+}
+
+variable "ecr_repository" {
+  description = "ECR repository name, e.g. ecr_repository_connector"
+  type        = string
+  default     = "ecr_repository_connector"
+}
+
+variable "image_tag" {
+  description = "Docker image tag to deploy (e.g., latest or git sha)"
+  type        = string
+  default     = "latest"
+}
+
+# Kafka Consumer variables
+variable "kafka_group_id" {
+  description = "Kafka consumer group id"
+  type        = string
+  default     = "vehicle-data-consumer-group"
+}
+
+variable "kafka_security_protocol" {
+  description = "Kafka security protocol"
+  type        = string
+  default     = "SASL_SSL"
+}
+
+variable "kafka_sasl_mechanism" {
+  description = "Kafka SASL mechanism"
+  type        = string
+  default     = "SCRAM-SHA-512"
+}
+
+# MongoDB variables
+variable "mongo_uri" {
+  description = "MongoDB connection URI"
+  type        = string
+  default     = "mongodb://mongodb-server:27017"
+}
+
+variable "mongo_db_name" {
+  description = "MongoDB database name"
+  type        = string
+  default     = "vehicle_data_db"
+}
+
+# Optional service variables
+variable "alcha_backend_port" {
+  description = "Alcha backend port (if needed by env)"
+  type        = number
+  default     = 9090
+}
+
+variable "redis_host" {
+  description = "Redis host"
+  type        = string
+  default     = "redis"
+}
+
+variable "redis_port" {
+  description = "Redis port"
+  type        = number
+  default     = 6379
+}

@@ -1,3 +1,84 @@
+variable "aws_region" {
+  description = "AWS region for ECR login and other operations"
+  type        = string
+}
+
+variable "ecr_registry" {
+  description = "ECR registry domain, e.g. 123456789012.dkr.ecr.ap-northeast-2.amazonaws.com"
+  type        = string
+}
+
+variable "ecr_repository" {
+  description = "ECR repository name, e.g. alcha/connector"
+  type        = string
+}
+
+variable "image_tag" {
+  description = "Docker image tag to deploy (e.g., latest or git sha)"
+  type        = string
+  default     = "latest"
+}
+
+variable "kafka_bootstrap" {
+  description = "Kafka bootstrap servers"
+  type        = string
+}
+
+variable "kafka_group_id" {
+  description = "Kafka consumer group id"
+  type        = string
+}
+
+variable "kafka_security_protocol" {
+  description = "Kafka security protocol"
+  type        = string
+  default     = "SASL_SSL"
+}
+
+variable "kafka_sasl_mechanism" {
+  description = "Kafka SASL mechanism"
+  type        = string
+  default     = "SCRAM-SHA-512"
+}
+
+variable "kafka_sasl_username" {
+  description = "Kafka SASL username"
+  type        = string
+}
+
+variable "kafka_sasl_password" {
+  description = "Kafka SASL password"
+  type        = string
+  sensitive   = true
+}
+
+variable "mongo_uri" {
+  description = "MongoDB connection URI"
+  type        = string
+}
+
+variable "mongo_db_name" {
+  description = "MongoDB database name"
+  type        = string
+}
+
+variable "alcha_backend_port" {
+  description = "Alcha backend port (if needed by env)"
+  type        = number
+  default     = 9090
+}
+
+variable "redis_host" {
+  description = "Redis host"
+  type        = string
+  default     = "redis"
+}
+
+variable "redis_port" {
+  description = "Redis port"
+  type        = number
+  default     = 6379
+}
 variable "project_name" {
   description = "Project name"
   type        = string

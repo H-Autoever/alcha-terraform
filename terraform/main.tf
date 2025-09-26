@@ -99,6 +99,29 @@ module "ec2" {
   bootstrap_brokers_sasl_scram = module.msk.bootstrap_brokers_sasl_scram
   iot_topic_name              = var.iot_topic_name
 
+  # ECR and Connector variables
+  aws_region                  = var.aws_region
+  ecr_registry                = var.ecr_registry
+  ecr_repository              = var.ecr_repository
+  image_tag                   = var.image_tag
+
+  # Kafka Consumer variables
+  kafka_bootstrap             = module.msk.bootstrap_brokers_sasl_scram
+  kafka_group_id              = var.kafka_group_id
+  kafka_security_protocol     = var.kafka_security_protocol
+  kafka_sasl_mechanism        = var.kafka_sasl_mechanism
+  kafka_sasl_username         = var.msk_scram_username
+  kafka_sasl_password         = var.msk_scram_password
+
+  # MongoDB variables
+  mongo_uri                   = var.mongo_uri
+  mongo_db_name               = var.mongo_db_name
+
+  # Optional service variables
+  alcha_backend_port          = var.alcha_backend_port
+  redis_host                  = var.redis_host
+  redis_port                  = var.redis_port
+
   depends_on = [
     module.msk,
     module.secrets,

@@ -57,7 +57,68 @@ docker run -d -p 8080:8080 \
     --name kafka-ui \
     provectuslabs/kafka-ui:latest
 
-# 추가 --
+# 추가 -- (ECR / .env / 컨테이너 실행)
+set -euo pipefail
+
+# 변수는 Terraform templatefile로 주입됩니다
+AWS_REGION="${aws_region}"
+ECR_REGISTRY="${ecr_registry}"
+ECR_REPO="${ecr_repository}"
+IMAGE_TAG="${image_tag}"
+CONNECTOR_IMAGE="$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
+
+# AWS CLI 설치 (없으면)
+if ! command -v aws >/dev/null 2>&1; then
+  yum install -y awscli
+fi
+
+# ECR 로그인
+aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+# 팀에서 alcha_network를 별도 생성한다고 했으나, 없으면 생성
+docker network create alcha_network || true
+
+# MongoDB (영속 볼륨 포함)
+docker volume create mongo_data || true
+docker rm -f mongodb-server || true
+docker pull mongo:6
+docker run -d --name mongodb-server \
+  --restart unless-stopped \
+  --network alcha_network \
+  -p 27017:27017 \
+  -v mongo_data:/data/db \
+  mongo:6
+
+# 통합 환경파일 작성(~/.env)
+cat > /home/ec2-user/.env <<ENV_EOF
+# Kafka
+KAFKA_BOOTSTRAP_SERVERS=${kafka_bootstrap}
+KAFKA_SECURITY_PROTOCOL=${kafka_security_protocol}
+KAFKA_SASL_MECHANISM=${kafka_sasl_mechanism}
+KAFKA_SASL_USERNAME=${kafka_sasl_username}
+KAFKA_SASL_PASSWORD=${kafka_sasl_password}
+
+# connector
+KAFKA_GROUP_ID=${kafka_group_id}
+MONGO_URI=${mongo_uri}
+MONGO_DB_NAME=${mongo_db_name}
+
+# consumer
+ALCHA_BACKEND_PORT=${alcha_backend_port}
+REDIS_HOST=${redis_host}
+REDIS_PORT=${redis_port}
+ENV_EOF
+chown ec2-user:ec2-user /home/ec2-user/.env
+chmod 600 /home/ec2-user/.env
+
+# 커넥터 최신 이미지 pull & 실행
+docker rm -f alcha-connector || true
+docker pull "$CONNECTOR_IMAGE"
+docker run -d --name alcha-connector \
+  --restart unless-stopped \
+  --network alcha_network \
+  --env-file /home/ec2-user/.env \
+  "$CONNECTOR_IMAGE"
 
 # 1. 개발 도구 그룹 설치
 sudo yum groupinstall -y "Development Tools"
