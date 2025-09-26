@@ -8,7 +8,7 @@ variable "ecr_registry" {
   type        = string
 }
 
-variable "ecr_repository" {
+variable "ecr_repository_connector" {
   description = "ECR repository name, e.g. alcha/connector"
   type        = string
 }
