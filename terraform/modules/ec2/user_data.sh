@@ -59,7 +59,7 @@ docker run -d -p 8080:8080 \
 
 # 추가 -- (ECR / .env / 컨테이너 실행)
 
-# 에러시 중단단
+# 에러시 중단
 set -euo pipefail
 
 # 변수는 Terraform templatefile로 주입됩니다
