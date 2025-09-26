@@ -64,7 +64,7 @@ set -euo pipefail
 
 # 변수는 Terraform templatefile로 주입됩니다
 AWS_REGION="${aws_region}"
-ECR_REGISTRY="${ecr_registry_}"
+ECR_REGISTRY="${ecr_registry}"
 ECR_REPO="${ecr_repository_connector}"
 IMAGE_TAG="${image_tag}"
 CONNECTOR_IMAGE="$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
