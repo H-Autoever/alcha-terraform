@@ -102,7 +102,7 @@ module "ec2" {
   # ECR and Connector variables
   aws_region                  = var.aws_region
   ecr_registry                = var.ecr_registry
-  ecr_repository              = var.ecr_repository
+  ecr_repository_connector    = var.ecr_repository_connector
   image_tag                   = var.image_tag
 
   # Kafka Consumer variables

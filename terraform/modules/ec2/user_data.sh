@@ -59,13 +59,13 @@ docker run -d -p 8080:8080 \
 
 # 추가 -- (ECR / .env / 컨테이너 실행)
 
-# 에러시 중단
+# 에러시 중단단
 set -euo pipefail
 
 # 변수는 Terraform templatefile로 주입됩니다
 AWS_REGION="${aws_region}"
-ECR_REGISTRY="${ecr_registry}"
-ECR_REPO="${ecr_repository}"
+ECR_REGISTRY="${ecr_registry_}"
+ECR_REPO="${ecr_repository_connector}"
 IMAGE_TAG="${image_tag}"
 CONNECTOR_IMAGE="$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
 
@@ -91,16 +91,16 @@ docker run -d --name mongodb-server \
 # 통합 환경파일 작성(~/.env)
 cat > /home/ec2-user/.env <<ENV_EOF
 # Kafka
-KAFKA_BOOTSTRAP_SERVERS=${kafka_bootstrap}
-KAFKA_SECURITY_PROTOCOL=${kafka_security_protocol}
-KAFKA_SASL_MECHANISM=${kafka_sasl_mechanism}
-KAFKA_SASL_USERNAME=${kafka_sasl_username}
-KAFKA_SASL_PASSWORD=${kafka_sasl_password}
+KAFKA_BOOTSTRAP_SERVERS=${bootstrap_brokers}
+KAFKA_SECURITY_PROTOCOL=SASL_SSL
+KAFKA_SASL_MECHANISM=SCRAM-SHA-512
+KAFKA_SASL_USERNAME=${username}
+KAFKA_SASL_PASSWORD=${password}
 
 # connector
-KAFKA_GROUP_ID=${kafka_group_id}
-MONGO_URI=${mongo_uri}
-MONGO_DB_NAME=${mongo_db_name}
+KAFKA_GROUP_ID=vehicle-data-consumer-group
+MONGO_URI=mongodb://mongodb:27017/
+MONGO_DB_NAME=vehicle_data_db
 
 # consumer
 ALCHA_BACKEND_PORT=${alcha_backend_port}
