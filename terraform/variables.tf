@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "project_name" {
   description = "Project name for resource naming and tagging"
   type        = string
-  default     = "iot-msk-pipeline-team-carpoor"
+  default     = "iot-msk-pipeline-team-alcha"
 }
 
 variable "environment" {
@@ -19,7 +19,7 @@ variable "environment" {
 variable "owner" {
   description = "Owner of the resources"
   type        = string
-  default     = "team-carpoor"
+  default     = "team-alcha"
 }
 
 variable "vpc_cidr" {
@@ -31,7 +31,7 @@ variable "vpc_cidr" {
 variable "vpc_name" {
   description = "VPC name"
   type        = string
-  default     = "vpc-iot-msk-team-carpoor"
+  default     = "vpc-iot-msk-team-alcha"
 }
 
 variable "availability_zones" {
@@ -49,7 +49,7 @@ variable "private_subnet_cidrs" {
 variable "private_subnet_names" {
   description = "Names for private subnets"
   type        = list(string)
-  default     = ["private-subnet-team-carpoor-1", "private-subnet-team-carpoor-2"]
+  default     = ["private-subnet-team-alcha-1", "private-subnet-team-alcha-2"]
 }
 
 variable "public_subnet_cidrs" {
@@ -61,7 +61,7 @@ variable "public_subnet_cidrs" {
 variable "public_subnet_names" {
   description = "Names for public subnets"
   type        = list(string)
-  default     = ["public-subnet-team-carpoor-1", "public-subnet-team-carpoor-2"]
+  default     = ["public-subnet-team-alcha-1", "public-subnet-team-alcha-2"]
 }
 
 variable "msk_instance_type" {
@@ -79,19 +79,19 @@ variable "msk_volume_size" {
 variable "ec2_instance_type" {
   description = "EC2 instance type for consumer"
   type        = string
-  default     = "t3.micro"
+  default     = "t3.medium"
 }
 
 variable "ec2_key_pair_name" {
   description = "EC2 key pair name"
   type        = string
-  default     = "team-carpoor-key"
+  default     = "team-alcha-key"
 }
 
 variable "msk_scram_username" {
   description = "MSK SCRAM username"
   type        = string
-  default     = "iotuser-team-carpoor"
+  default     = "iotuser-team-alcha"
 }
 
 variable "msk_scram_password" {
@@ -104,7 +104,7 @@ variable "msk_scram_password" {
 variable "iot_thing_name" {
   description = "IoT Thing name"
   type        = string
-  default     = "test-team-carpoor"
+  default     = "test-team-alcha"
 }
 
 variable "iot_topic_name" {
