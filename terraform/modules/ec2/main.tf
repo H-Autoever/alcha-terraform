@@ -76,6 +76,17 @@ resource "aws_iam_role_policy" "ec2" {
           "kafka:GetBootstrapBrokers"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:ListImages"
+        ]
+        Resource = "*"
       }
     ]
   })
@@ -105,6 +116,15 @@ locals {
     topic_name              = var.iot_topic_name
     username                = local.msk_credentials.username
     password                = local.msk_credentials.password
+    ecr_registry            = var.ecr_registry
+    ecr_repository_connector = var.ecr_repository_connector
+    image_tag               = var.image_tag
+    kafka_group_id          = var.kafka_group_id
+    mongo_uri               = var.mongo_uri
+    mongo_db_name           = var.mongo_db_name
+    alcha_backend_port      = var.alcha_backend_port
+    redis_host              = var.redis_host
+    redis_port              = var.redis_port
   }))
 }
 
