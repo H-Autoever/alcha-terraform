@@ -117,12 +117,13 @@ variable "iot_topic_name" {
 variable "ecr_registry" {
   description = "ECR registry domain, e.g. 123456789012.dkr.ecr.ap-northeast-2.amazonaws.com"
   type        = string
+  default     = "577012215958.dkr.ecr.ap-northeast-2.amazonaws.com"
 }
 
-variable "ecr_repository" {
-  description = "ECR repository name, e.g. ecr_repository_connector"
+variable "ecr_repository_connector" {
+  description = "ECR repository alcha/connector"
   type        = string
-  default     = "ecr_repository_connector"
+  default     = "alcha/connector"
 }
 
 variable "image_tag" {
@@ -163,13 +164,14 @@ variable "mongo_db_name" {
   default     = "vehicle_data_db"
 }
 
-# Optional service variables
+# Connector variables
 variable "alcha_backend_port" {
   description = "Alcha backend port (if needed by env)"
   type        = number
   default     = 9090
 }
 
+# Redis variables
 variable "redis_host" {
   description = "Redis host"
   type        = string
