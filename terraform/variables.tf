@@ -189,3 +189,17 @@ variable "redis_port" {
   type        = number
   default     = 6379
 }
+
+# ArgoCD
+variable "argocd_version" {
+  description = "Helm chart version of ArgoCD"
+  type        = string
+  default     = "6.7.15"
+}
+
+# Team Users
+variable "team_users" {
+  description = "List of team user names for EKS access"
+  type        = list(string)
+  default     = ["psw", "pdh", "ljh", "cym", "bsj"]
+}
