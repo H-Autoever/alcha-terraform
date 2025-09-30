@@ -246,3 +246,182 @@ resource "aws_security_group" "ec2" {
     Name = "ec2-sg-team-alcha"
   }
 }
+
+
+# Security Group for EKS Cluster
+resource "aws_security_group" "eks_cluster" {
+  name_prefix = "eks-cluster-sg-team-alcha-"
+  description = "Security group for EKS cluster team-alcha"
+  vpc_id      = aws_vpc.main.id
+
+  # EKS API Server access (HTTPS)
+  ingress {
+    description = "EKS API Server"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    self        = true
+  }
+
+  # HTTP for ALB
+  ingress {
+    description = "HTTP for ALB"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # HTTPS for ALB
+  ingress {
+    description = "HTTPS for ALB"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "eks-cluster-sg-team-alcha"
+    Environment = "kubernetes"
+  }
+}
+
+# Security Group for EKS Node Group (Workers)
+resource "aws_security_group" "eks_nodes" {
+  name_prefix = "eks-nodes-sg-team-alcha-"
+  description = "Security group for EKS worker nodes team-alcha"
+  vpc_id      = aws_vpc.main.id
+
+  # All traffic from cluster
+  ingress {
+    description     = "All traffic from EKS cluster"
+    from_port       = 0
+    to_port         = 65535
+    protocol        = "tcp"
+    security_groups = [aws_security_group.eks_cluster.id]
+  }
+
+  # Node port range
+  ingress {
+    description = "Node port range"
+    from_port   = 30000
+    to_port     = 32767
+    protocol    = "tcp"
+    self        = true
+  }
+
+  # Pod communication
+  ingress {
+    description = "EKS POD communications"
+    from_port   = 1025
+    to_port     = 65535
+    protocol    = "tcp"
+    self        = true
+  }
+
+  # Kubernetes API Server
+  ingress {
+    description     = "Permission for Kubernetes API Server"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.eks_cluster.id]
+  }
+
+  # HTTPS egress
+  egress {
+    description = "All outbound HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # HTTP egress
+  egress {
+    description = "All outbound HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Kubernetes API Server
+  egress {
+    description     = "Kubernetes API Server"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.eks_cluster.id]
+  }
+
+  # DNS
+  egress {
+    description = "DNS"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # DNS (UDP)
+  egress {
+    description = "DNS UDP"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "eks-nodes-sg-team-alcha"
+    Environment = "kubernetes"
+  }
+}
+
+# Security Group for ALB (Application Load Balancer)
+resource "aws_security_group" "alb" {
+  name_prefix = "alb-sg-team-alcha-"
+  description = "Security group for ALB team-alcha"
+  vpc_id      = aws_vpc.main.id
+
+  # HTTP from anywhere
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # HTTPS from anywhere
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "alb-sg-team-alcha"
+    Environment = "kubernetes"
+  }
+}

@@ -3,7 +3,10 @@ resource "aws_eks_cluster" "main" {
   role_arn = var.cluster_role_arn
 
   vpc_config {
-    subnet_ids = var.subnet_ids
+    subnet_ids                   = var.subnet_ids
+    endpoint_private_access      = true
+    endpoint_public_access       = true
+    public_access_cidrs         = ["0.0.0.0/0"]
   }
 
   version = var.kubernetes_version

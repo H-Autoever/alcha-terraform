@@ -189,6 +189,36 @@ resource "aws_iam_role_policy_attachment" "eks_node_policy_3" {
   role       = aws_iam_role.eks_node_role.name
 }
 
+# IAM Policy for EKS Access (for all team members)
+resource "aws_iam_policy" "eks_access_policy" {
+  name        = "${var.project_name}-eks-access-policy"
+  description = "Policy for EKS cluster access"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:DescribeNodeGroup",
+          "eks:ListNodeGroups",
+          "eks:AccessKubernetesApi"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach the policy to all team members
+resource "aws_iam_user_policy_attachment" "team_eks_access" {
+  count      = length(var.team_users)
+  user       = var.team_users[count.index]
+  policy_arn = aws_iam_policy.eks_access_policy.arn
+}
+
 
 # Call the EKS module
 module "eks" {
