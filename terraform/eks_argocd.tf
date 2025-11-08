@@ -15,7 +15,7 @@ resource "helm_release" "argocd" {
   values = [yamlencode({
     server = {
       service = {
-        type = "ClusterIP" # 외부 노출
+        type = "LoadBalancer" 
       }
       ingress = {
         enabled = true
